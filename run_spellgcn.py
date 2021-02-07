@@ -22,7 +22,7 @@ import os, time
 import modeling
 import optimization
 import tensorflow as tf
-import horovod.tensorflow as hvd
+#import horovod.tensorflow as hvd
 import numpy, time
 import collections
 import csv
@@ -185,10 +185,10 @@ class LossHook(tf.train.SessionRunHook):
       return self.fetches
 
     def after_run(self, run_context, run_values):
-        if (not FLAGS.use_horovod or hvd.rank()==0) and self.step % self.intervel == 0:
-            global_step, total_loss, masked_lm_loss, learning_rate = run_values.results
-            tf.logging.info('global_step=%d\ttotal_loss=%2.6f\tmasked_lm_loss=%2.6f\tlearning_rate=%.6e' % (
-                global_step, total_loss, masked_lm_loss, learning_rate))
+#        if (not FLAGS.use_horovod or hvd.rank()==0) and self.step % self.intervel == 0:
+#            global_step, total_loss, masked_lm_loss, learning_rate = run_values.results
+#            tf.logging.info('global_step=%d\ttotal_loss=%2.6f\tmasked_lm_loss=%2.6f\tlearning_rate=%.6e' % (
+#                global_step, total_loss, masked_lm_loss, learning_rate))
         self.step += 1
 
 
@@ -421,7 +421,7 @@ def model_fn_builder(adj_mat, w2n, n2w, bert_config, init_checkpoint, learning_r
 
     initialized_variable_names = {}
     scaffold_fn = None
-    if init_checkpoint and (not FLAGS.use_horovod or hvd.rank() == 0):
+    if init_checkpoint and (not FLAGS.use_horovod):
       (assignment_map, initialized_variable_names
       ) = modeling.get_assignment_map_from_checkpoint(tvars, init_checkpoint)
       if use_tpu:
@@ -434,7 +434,7 @@ def model_fn_builder(adj_mat, w2n, n2w, bert_config, init_checkpoint, learning_r
       else:
         tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
 
-    if not FLAGS.use_horovod or hvd.rank() == 0:
+    if not FLAGS.use_horovod:
       tf.logging.info("**** Trainable Variables ****")
       for var in tvars:
         init_string = ""
@@ -925,8 +925,8 @@ def file_based_input_fn_builder(input_file, seq_length, max_predictions_per_seq,
     # For eval, we want no shuffling and parallel reading doesn't matter.
     d = tf.data.TFRecordDataset(input_file)
     if is_training:
-      if FLAGS.use_horovod:
-        d = d.shard(hvd.size(), hvd.rank())
+#      if FLAGS.use_horovod:
+#        d = d.shard(hvd.size(), hvd.rank())
       d = d.repeat()
       d = d.shuffle(buffer_size=100, seed=FLAGS.random_seed)
 
@@ -1003,8 +1003,8 @@ def main(_):
     set_rand_seed(FLAGS.random_seed)
   tf.logging.set_verbosity(tf.logging.INFO)
   tf.logging.info('config: \n' + tf.flags.FLAGS.flags_into_string())
-  if FLAGS.use_horovod:
-    hvd.init()
+#  if FLAGS.use_horovod:
+#    hvd.init()
 
   #if not FLAGS.do_train and not FLAGS.do_eval:
   #  raise ValueError("At least one of `do_train` or `do_eval` must be True.")
@@ -1033,8 +1033,8 @@ def main(_):
     
 
   config = tf.ConfigProto()
-  if FLAGS.use_horovod:
-    config.gpu_options.visible_device_list = str(hvd.local_rank())
+#  if FLAGS.use_horovod:
+#    config.gpu_options.visible_device_list = str(hvd.local_rank())
 
   run_config = tf.estimator.RunConfig(
       session_config=config,
@@ -1056,7 +1056,7 @@ def main(_):
       n2w = np.array(n2w),
       bert_config=bert_config,
       init_checkpoint=FLAGS.init_checkpoint,
-      learning_rate=FLAGS.learning_rate if not FLAGS.use_horovod else FLAGS.learning_rate*hvd.size(),
+      learning_rate=FLAGS.learning_rate,
       num_train_steps=num_train_steps,
       num_warmup_steps=num_warmup_steps,
       use_tpu=FLAGS.use_tpu,
@@ -1103,8 +1103,8 @@ def main(_):
 
 
     training_hooks = []
-    if FLAGS.use_horovod and hvd.size() > 1:
-      training_hooks.append(hvd.BroadcastGlobalVariablesHook(0))
+#    if FLAGS.use_horovod and hvd.size() > 1:
+#      training_hooks.append(hvd.BroadcastGlobalVariablesHook(0))
 
     training_hooks.append(LossHook(100))
     tf.logging.info("***** Running training *****")

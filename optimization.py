@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import re
 import tensorflow as tf
-import horovod.tensorflow as hvd
+# import horovod.tensorflow as hvd
 
 def create_optimizer(loss, init_lr, num_train_steps, num_warmup_steps, use_tpu, use_horovod):
   """Creates an optimizer training op."""
@@ -67,8 +67,8 @@ def create_optimizer(loss, init_lr, num_train_steps, num_warmup_steps, use_tpu, 
   if use_tpu:
     optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
-  if use_horovod:
-    optimizer = hvd.DistributedOptimizer(optimizer, sparse_as_dense=True, compression=hvd.Compression.fp16)
+#  if use_horovod:
+#    optimizer = hvd.DistributedOptimizer(optimizer, sparse_as_dense=True, compression=hvd.Compression.fp16)
 
 
   tvars = tf.trainable_variables()
