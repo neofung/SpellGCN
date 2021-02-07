@@ -185,10 +185,10 @@ class LossHook(tf.train.SessionRunHook):
       return self.fetches
 
     def after_run(self, run_context, run_values):
-#        if (not FLAGS.use_horovod or hvd.rank()==0) and self.step % self.intervel == 0:
-#            global_step, total_loss, masked_lm_loss, learning_rate = run_values.results
-#            tf.logging.info('global_step=%d\ttotal_loss=%2.6f\tmasked_lm_loss=%2.6f\tlearning_rate=%.6e' % (
-#                global_step, total_loss, masked_lm_loss, learning_rate))
+        if (not FLAGS.use_horovod) and self.step % self.intervel == 0:
+            global_step, total_loss, masked_lm_loss, learning_rate = run_values.results
+            tf.logging.info('global_step=%d\ttotal_loss=%2.6f\tmasked_lm_loss=%2.6f\tlearning_rate=%.6e' % (
+                global_step, total_loss, masked_lm_loss, learning_rate))
         self.step += 1
 
 
