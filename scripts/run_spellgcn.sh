@@ -7,7 +7,7 @@ fi
 task_name=CSC
 timestamp=`date "+%Y-%m-%d-%H-%M-%S"`
 lr=5e-5
-batch_size=32
+batch_size=16
 num_epochs=10
 max_seq_length=180
 do_lower_case=true
